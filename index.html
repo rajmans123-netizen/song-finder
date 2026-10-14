@@ -2,82 +2,130 @@
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Song Finder</title>
-<meta name="description" content="A song recogniser built from scratch with Claude: tap, play a song, and it names it. English and Hindi hits.">
+<meta name="description" content="A song recogniser built from scratch with Claude: tap, hold your phone near the music, and it names the song. 485 English and Hindi hits.">
+<meta property="og:title" content="Song Finder">
+<meta property="og:description" content="Built from scratch with Claude, the way Shazam works. Tap and it names the song.">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#F7F6F2;--card:#FFFFFF;--ink:#1F1D24;--muted:#77737F;--line:#E6E2DC;--accent:#3355FF;--accent2:#FF4D8D;--spec:#1F1D24}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121117;--card:#1B1A21;--ink:#F2F0F5;--muted:#9C98A6;--line:#2C2A33;--spec:#F2F0F5}}
-:root[data-theme="dark"]{--bg:#121117;--card:#1B1A21;--ink:#F2F0F5;--muted:#9C98A6;--line:#2C2A33;--spec:#F2F0F5}
-*{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
-main{max-width:560px;margin:0 auto;padding:28px 16px 40px}
-.kicker{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);font-weight:600}
-h1{font-size:34px;line-height:1.05;margin:6px 0 6px;font-weight:800;letter-spacing:-.02em}
-.sub{color:var(--muted);font-size:15px;line-height:1.45;margin:0 0 22px}
-.stage{display:flex;flex-direction:column;align-items:center;gap:14px;margin:8px 0 18px}
-#go{width:172px;height:172px;border-radius:50%;border:0;background:var(--accent);color:#fff;font:800 18px Inter,sans-serif;cursor:pointer;position:relative;box-shadow:0 14px 40px -12px rgba(51,85,255,.6);transition:transform .15s}
-#go:active{transform:scale(.97)}#go:disabled{opacity:.92}
-#go.listening::before,#go.listening::after{content:"";position:absolute;inset:-14px;border-radius:50%;border:2px solid var(--accent);opacity:0;animation:ring 1.6s ease-out infinite}
-#go.listening::after{animation-delay:.8s}
-@keyframes ring{0%{transform:scale(.85);opacity:.7}100%{transform:scale(1.25);opacity:0}}
-#status{font-size:15px;color:var(--muted);min-height:22px;text-align:center}
-#meter{width:160px;height:6px;border-radius:3px;background:var(--line);overflow:hidden;opacity:0;transition:opacity .2s}#meter.on{opacity:1}#meter i{display:block;height:100%;width:0;background:var(--accent);transition:width .1s}
-#guess{font-size:12px;color:var(--muted);min-height:16px;text-align:center}
-.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:14px}
-#viz{width:100%;height:190px;display:block;border-radius:10px}
-.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-top:8px}
-.legend i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;vertical-align:-1px}
-#result{display:none;margin-top:14px;gap:14px;align-items:center}
-#result.show{display:flex}
-#result img{width:84px;height:84px;border-radius:12px;object-fit:cover;flex:none;background:var(--line)}
-#result .t{font-weight:800;font-size:19px;line-height:1.2}#result .a{color:var(--muted);font-size:14px;margin-top:3px}
-#result .links{display:flex;gap:14px;margin-top:9px}#result a{font-size:13px;font-weight:700;color:var(--accent);text-decoration:none}
-#spike{width:100%;height:84px;display:none;margin-top:12px}
-#how{margin-top:20px}#how h2{font-size:16px;margin:0 0 10px}
-#how ol{margin:0;padding-left:20px;color:var(--muted);font-size:14px;line-height:1.55}#how b{color:var(--ink)}
-details{margin-top:16px}summary{cursor:pointer;font-weight:700;font-size:15px}
-#q{width:100%;margin:10px 0;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font:15px Inter,sans-serif}
-#list{max-height:340px;overflow:auto;font-size:14px}#list div{padding:7px 2px;border-bottom:1px solid var(--line)}#list span{color:var(--muted)}
-.tabs{display:flex;gap:6px;flex-wrap:wrap}.tabs button{border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:999px;padding:6px 11px;font:600 12px Inter,sans-serif;cursor:pointer}
-.tabs button.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
-footer{margin-top:22px;font-size:12px;color:var(--muted);line-height:1.5}
-.err{color:var(--accent2)}
+:root{--bg:#F6F4FF;--bg2:#FFF5F0;--card:#FFFFFF;--ink:#1D1B2B;--muted:#6F6B80;--line:#E8E4F2;--blue:#3355FF;--blue2:#7B5CFF;--pink:#FF4D8D;--green:#1DB954;--soft:#EEF0FF}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#11101A;--bg2:#1A1320;--card:#1C1B27;--ink:#F3F1FA;--muted:#A19DB3;--line:#2D2B3B;--soft:#232445}}
+:root[data-theme="dark"]{--bg:#11101A;--bg2:#1A1320;--card:#1C1B27;--ink:#F3F1FA;--muted:#A19DB3;--line:#2D2B3B;--soft:#232445}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;background:linear-gradient(180deg,var(--bg),var(--bg2));background-attachment:fixed;color:var(--ink);font-family:Inter,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+main{max-width:520px;margin:0 auto;padding:22px 16px 48px}
+header{display:flex;align-items:center;justify-content:space-between}
+.brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:20px}
+.brand i{width:30px;height:30px;border-radius:10px;background:linear-gradient(135deg,var(--blue),var(--blue2));display:grid;place-items:center}
+.brand i svg{width:16px;height:16px}
+.tag{font-size:11px;font-weight:700;letter-spacing:.08em;color:var(--muted);text-transform:uppercase}
+/* listen stage */
+.stage{display:flex;flex-direction:column;align-items:center;text-align:center;padding:34px 0 10px}
+.wrap{position:relative;width:224px;height:224px}
+#go{position:absolute;inset:16px;border-radius:50%;border:0;cursor:pointer;color:#fff;background:linear-gradient(145deg,var(--blue),var(--blue2));box-shadow:0 22px 50px -18px rgba(51,85,255,.7);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;transition:transform .15s}
+#go:active{transform:scale(.96)}
+#go svg{width:54px;height:54px}
+#go span{font:800 15px Inter,sans-serif;letter-spacing:.01em}
+#ring{position:absolute;inset:0;transform:rotate(-90deg)}
+#ring circle{fill:none;stroke-width:6}
+#ring .bg{stroke:var(--line)}#ring .fg{stroke:var(--pink);stroke-linecap:round;stroke-dasharray:666;stroke-dashoffset:666;transition:stroke-dashoffset .3s linear}
+.pulse{position:absolute;inset:16px;border-radius:50%;background:var(--blue);opacity:0;pointer-events:none}
+.listening .pulse{animation:pulse 1.4s ease-out infinite}.listening .pulse.b{animation-delay:.7s}
+@keyframes pulse{0%{transform:scale(1);opacity:.35}100%{transform:scale(1.45);opacity:0}}
+h1{font-size:26px;line-height:1.15;margin:26px 0 6px;font-weight:800;letter-spacing:-.02em}
+#hint{color:var(--muted);font-size:15px;line-height:1.45;margin:0;max-width:330px}
+#bars{display:flex;gap:6px;height:34px;align-items:center;margin-top:16px;opacity:0;transition:opacity .2s}
+#bars.on{opacity:1}#bars i{width:7px;border-radius:4px;background:linear-gradient(var(--blue),var(--pink));height:6px;transition:height .1s}
+.chip{display:inline-flex;gap:6px;align-items:center;margin-top:18px;padding:8px 14px;border-radius:999px;background:var(--card);border:1px solid var(--line);font-size:13px;font-weight:600;color:var(--muted)}
+.chip b{color:var(--ink)}
+/* result */
+#result{display:none;margin-top:8px}#result.show{display:block;animation:pop .45s cubic-bezier(.2,1.4,.4,1)}
+@keyframes pop{0%{transform:scale(.9);opacity:0}100%{transform:scale(1);opacity:1}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:26px;padding:16px;box-shadow:0 20px 50px -28px rgba(40,30,90,.35)}
+#art{width:100%;aspect-ratio:1;object-fit:cover;border-radius:18px;display:block;background:var(--soft)}
+.found{display:inline-block;margin:16px 0 6px;padding:6px 12px;border-radius:999px;background:rgba(255,77,141,.12);color:var(--pink);font-size:12px;font-weight:800;letter-spacing:.06em}
+#rt{font-size:28px;font-weight:800;line-height:1.15;letter-spacing:-.02em}#ra{color:var(--muted);font-size:16px;margin-top:4px}
+.btns{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;padding:14px 10px;border-radius:16px;font:700 15px Inter,sans-serif;text-decoration:none;border:0;cursor:pointer}
+.sp{background:var(--green);color:#fff}.am{background:var(--ink);color:var(--card)}
+.again{grid-column:1/3;background:var(--soft);color:var(--blue)}
+/* not found */
+#nores{display:none;text-align:center}#nores.show{display:block;animation:pop .4s ease}
+#nores h2{margin:6px 0 8px;font-size:21px}#nores ul{text-align:left;color:var(--muted);font-size:15px;line-height:1.6;margin:8px 0 14px;padding-left:20px}
+/* sections */
+section.more{margin-top:18px}
+details.card{padding:0}details.card>summary{list-style:none;cursor:pointer;padding:16px 18px;font-weight:700;font-size:16px;display:flex;justify-content:space-between;align-items:center}
+details.card>summary::after{content:"+";font-size:22px;color:var(--muted)}details[open].card>summary::after{content:"–"}
+details .in{padding:0 18px 18px}
+#recent{display:none}#recent.show{display:block}
+.row{display:flex;align-items:center;gap:12px;padding:10px 0;border-top:1px solid var(--line)}.row:first-child{border-top:0}
+.row img{width:46px;height:46px;border-radius:10px;object-fit:cover;background:var(--soft)}.row .t{font-weight:700;font-size:15px}.row .a{color:var(--muted);font-size:13px}
+#viz{width:100%;height:170px;display:block;border-radius:14px;background:var(--soft)}#spike{width:100%;height:70px;display:block;margin-top:10px}
+.steps{margin:14px 0 0;padding-left:20px;color:var(--muted);font-size:14px;line-height:1.55}.steps b{color:var(--ink)}
+#q{width:100%;margin:4px 0 10px;padding:12px 14px;border-radius:14px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font:15px Inter,sans-serif}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}.tabs button{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;padding:7px 12px;font:600 12px Inter,sans-serif;cursor:pointer}
+.tabs button.on{background:var(--blue);color:#fff;border-color:var(--blue)}
+#list{max-height:360px;overflow:auto}#list .row{padding:8px 0}
+footer{margin-top:22px;font-size:12px;color:var(--muted);line-height:1.55;text-align:center}
+.err{color:var(--pink);font-weight:600}
 </style></head>
 <body><main>
-  <div class="kicker">Raj Tries · Build 5 of 30</div>
-  <h1>Song Finder</h1>
-  <p class="sub">Built from scratch with Claude, the way Shazam does it. Tap, play a song near your phone, and it names it. It knows <b id="count">500</b> English and Hindi songs.</p>
+  <header>
+    <div class="brand"><i><svg viewBox="0 0 24 24" fill="#fff"><path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3Zm-7 9a1 1 0 1 1 2 0 5 5 0 0 0 10 0 1 1 0 1 1 2 0 7 7 0 0 1-6 6.92V21a1 1 0 1 1-2 0v-2.08A7 7 0 0 1 5 12Z"/></svg></i>Song Finder</div>
+    <div class="tag">Raj Tries · 5/30</div>
+  </header>
 
-  <div class="stage">
-    <button id="go" aria-label="Tap to listen">Tap to listen</button>
-    <div id="status">Play a song out loud, then tap. The chorus works best.</div>
-    <div id="meter" aria-hidden="true"><i></i></div>
-    <div id="guess"></div>
+  <div class="stage" id="stage">
+    <div class="wrap" id="wrap">
+      <svg id="ring" viewBox="0 0 224 224"><circle class="bg" cx="112" cy="112" r="106"/><circle class="fg" id="prog" cx="112" cy="112" r="106"/></svg>
+      <div class="pulse"></div><div class="pulse b"></div>
+      <button id="go" aria-label="Tap to find the song">
+        <svg viewBox="0 0 24 24" fill="#fff"><path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3Zm-7 9a1 1 0 1 1 2 0 5 5 0 0 0 10 0 1 1 0 1 1 2 0 7 7 0 0 1-6 6.92V21a1 1 0 1 1-2 0v-2.08A7 7 0 0 1 5 12Z"/></svg>
+        <span id="golabel">Tap to listen</span>
+      </button>
+    </div>
+    <h1 id="title">What's this song?</h1>
+    <p id="hint">Hold your phone near the music and tap. The chorus works best.</p>
+    <div id="bars" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+    <div class="chip">Knows <b id="count">485</b> English &amp; Hindi songs</div>
   </div>
 
-  <div class="card">
-    <canvas id="viz"></canvas>
-    <div class="legend"><span><i style="background:var(--muted)"></i>sound (pitch × time)</span><span><i style="background:var(--accent)"></i>loudest points ("stars")</span><span><i style="background:var(--accent2)"></i>stars that matched the song</span></div>
-    <div id="result"><img id="art" alt=""><div><div class="t" id="rt"></div><div class="a" id="ra"></div><div class="links"><a id="rl" target="_blank" rel="noopener">Apple Music →</a><a id="rs" target="_blank" rel="noopener">Spotify →</a></div></div></div>
-    <canvas id="spike"></canvas>
+  <div id="result" class="card">
+    <img id="art" alt="">
+    <span class="found" id="foundin">FOUND IT</span>
+    <div id="rt"></div><div id="ra"></div>
+    <div class="btns">
+      <a class="btn sp" id="rs" target="_blank" rel="noopener">▶ Spotify</a>
+      <a class="btn am" id="rl" target="_blank" rel="noopener">Apple Music</a>
+      <button class="btn again" id="again">Find another song</button>
+    </div>
   </div>
 
-  <div id="how" class="card">
-    <h2>How it works</h2>
-    <ol>
-      <li><b>Sound becomes a picture.</b> The mic audio becomes a spectrogram: time across, pitch up, loudness as brightness.</li>
-      <li><b>Keep only the stars.</b> Just the loudest points survive, about 18 a second. Background noise rarely beats them, so it works in a noisy room.</li>
-      <li><b>Pairs of stars become fingerprints.</b> Each star is paired with the next few: pitch, pitch and the gap between them make one tiny code.</li>
-      <li><b>Find the song where the codes line up.</b> Hundreds of codes match one song at the same moment, and that spike is the answer.</li>
+  <div id="nores" class="card">
+    <div style="font-size:40px">🎧</div>
+    <h2>Hmm, didn't catch that</h2>
+    <ul><li>Play the <b>chorus</b>, the catchiest part</li><li>Turn it up a little and hold the phone closer</li><li>It might not be one of the 485 songs it knows yet</li></ul>
+    <button class="btn again" id="again2" style="width:100%">Try again</button>
+  </div>
+
+  <section class="more" id="recent"><div class="card"><div style="font-weight:700;margin-bottom:6px">Your finds</div><div id="recentList"></div></div></section>
+
+  <section class="more"><details class="card" id="howcard"><summary>See how it heard it</summary><div class="in">
+    <canvas id="viz"></canvas><canvas id="spike"></canvas>
+    <ol class="steps">
+      <li><b>Sound becomes a picture:</b> time across, pitch up, loudness as brightness.</li>
+      <li><b>Keep only the loudest dots</b> (blue). Background noise rarely beats them.</li>
+      <li><b>Pair the dots into codes:</b> pitch, pitch and the gap between them.</li>
+      <li><b>Find where the codes line up</b> (pink). Hundreds land at one moment of one song.</li>
     </ol>
-  </div>
+  </div></details></section>
 
-  <details class="card"><summary>Songs it knows</summary>
+  <section class="more"><details class="card"><summary>Songs it knows</summary><div class="in">
     <div class="tabs" id="tabs"></div>
     <input id="q" placeholder="Search a song or artist" autocomplete="off">
     <div id="list"></div>
-  </details>
+  </div></details></section>
 
-  <footer>Real Shazam knows millions of songs. This one knows the songs above: today's Apple Music charts (US, UK, India) plus all-time pop, Hindi classics, Bollywood love songs and roadtrip songs. It stores only fingerprints, never the audio; song info and links are from Apple Music. Your microphone audio never leaves your phone.</footer>
+  <footer>Built from scratch with Claude, using the method Shazam published in 2003. Real Shazam knows millions of songs; this one knows 485. It stores fingerprints, never audio, and your microphone audio never leaves your phone. Song info and links from Apple Music.</footer>
 </main>
 <script src="fingerprint.js"></script>
 <script>
@@ -85,9 +133,11 @@ const $ = id => document.getElementById(id);
 let DB = null, SONGS = [];
 const ready = (async () => {
   const [buf, songs] = await Promise.all([fetch('db.bin').then(r => r.arrayBuffer()), fetch('songs.json').then(r => r.json())]);
-  DB = FP.loadDB(buf);
-  SONGS = songs; $('count').textContent = songs.length; buildList();
+  DB = FP.loadDB(buf); SONGS = songs; $('count').textContent = songs.length; buildList();
 })();
+const clean = s => s.replace(/\s*[\(\[].*$/, '');
+const art = (s, px) => (s.art || '').replace('100x100', `${px}x${px}`);
+const esc = s => s.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
 // ---- song list
 const CATS = ['All', 'Charts now', 'Pop classics', 'Roadtrip', 'Hindi classics', 'Bollywood love'];
@@ -96,51 +146,43 @@ function buildList() {
   $('tabs').innerHTML = CATS.map(c => `<button class="${c === cat ? 'on' : ''}" data-c="${c}">${c}</button>`).join('');
   const q = $('q').value.trim().toLowerCase();
   const rows = SONGS.filter(s => (cat === 'All' || (s.c || []).includes(cat)) && (!q || (s.n + ' ' + s.a).toLowerCase().includes(q)));
-  $('list').innerHTML = rows.map(s => `<div>${esc(s.n)} <span>· ${esc(s.a)}</span></div>`).join('') || '<div><span>No songs match.</span></div>';
+  $('list').innerHTML = rows.map(s => `<div class="row"><img loading="lazy" src="${art(s, 100)}" alt=""><div><div class="t">${esc(clean(s.n))}</div><div class="a">${esc(s.a)}</div></div></div>`).join('') || '<div class="a">No songs match.</div>';
 }
-const esc = s => s.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 $('tabs').onclick = e => { if (e.target.dataset.c) { cat = e.target.dataset.c; buildList(); } };
 $('q').oninput = buildList;
 
-// ---- drawing
+// ---- recent finds (only on this phone)
+const RK = 'songfinder_recent';
+function loadRecent() { try { return JSON.parse(localStorage.getItem(RK) || '[]'); } catch (e) { return []; } }
+function showRecent() {
+  const r = loadRecent(); $('recent').classList.toggle('show', r.length > 0);
+  $('recentList').innerHTML = r.map(i => { const s = SONGS[i]; return s ? `<div class="row"><img src="${art(s, 100)}" alt=""><div><div class="t">${esc(clean(s.n))}</div><div class="a">${esc(s.a)}</div></div></div>` : ''; }).join('');
+}
+function addRecent(i) { let r = loadRecent().filter(x => x !== i); r.unshift(i); r = r.slice(0, 8); try { localStorage.setItem(RK, JSON.stringify(r)); } catch (e) {} showRecent(); }
+ready.then(showRecent);
+
+// ---- "see how it heard it"
 const viz = $('viz'), vx = viz.getContext('2d'), spike = $('spike'), sx = spike.getContext('2d');
 const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
-function fit(c) { const r = c.getBoundingClientRect(), d = devicePixelRatio || 1; c.width = Math.round(r.width * d); c.height = Math.round(r.height * d); }
-function draw(fp, matched) {
-  fit(viz); const W = viz.width, H = viz.height, d = devicePixelRatio || 1;
-  vx.clearRect(0, 0, W, H);
-  const S = fp.S, NF = FP.NF, cw = W / Math.max(S.length, Math.round(3 * FP.SR / FP.HOP));   // fill the width with what was heard
-  let lo = Infinity, hi = -Infinity;
-  for (const row of S) for (let f = 0; f < NF; f += 4) { if (row[f] < lo) lo = row[f]; if (row[f] > hi) hi = row[f]; }
-  const ink = css('--spec'), rows = 96;
-  vx.fillStyle = ink;
-  for (let t = 0; t < S.length; t++) for (let k = 0; k < rows; k++) {
-    const f = Math.floor(k * NF / rows), v = (S[t][f] - lo) / (hi - lo + 1e-6);
-    if (v < 0.35) continue; vx.globalAlpha = Math.min(0.55, (v - 0.35) * 1.1); vx.fillRect(t * cw, H - (k + 1) * H / rows, cw + 0.5, H / rows + 0.5);
-  }
-  vx.globalAlpha = 1;
-  const fy = f => H - (f - FP.F_LO) / NF * H;
-  if (matched) {   // link matched stars to their partners
-    vx.strokeStyle = css('--accent2'); vx.globalAlpha = .35; vx.lineWidth = 1 * d; vx.beginPath();
-    for (const [a, b] of matched.pairs) { vx.moveTo(a.t * cw, fy(a.f)); vx.lineTo(b.t * cw, fy(b.f)); }
-    vx.stroke(); vx.globalAlpha = 1;
-  }
-  for (const p of fp.P) {
-    const hit = matched && matched.stars.has(p.t * 1000 + p.f);
-    vx.fillStyle = hit ? css('--accent2') : css('--accent');
-    vx.beginPath(); vx.arc(p.t * cw, fy(p.f), (hit ? 3.2 : 2.2) * d, 0, 7); vx.fill();
+function fit(c) { const r = c.getBoundingClientRect(), d = devicePixelRatio || 1; c.width = Math.max(1, Math.round(r.width * d)); c.height = Math.max(1, Math.round(r.height * d)); }
+let LAST = null;
+function drawHow() {
+  if (!LAST || !$('howcard').open) return;
+  const { fp, matched, m } = LAST; fit(viz); const W = viz.width, H = viz.height, d = devicePixelRatio || 1;
+  vx.clearRect(0, 0, W, H); const S = fp.S, NF = FP.NF, cw = W / Math.max(S.length, 1), rows = 90;
+  let lo = Infinity, hi = -Infinity; for (const row of S) for (let f = 0; f < NF; f += 4) { if (row[f] < lo) lo = row[f]; if (row[f] > hi) hi = row[f]; }
+  vx.fillStyle = css('--ink');
+  for (let t = 0; t < S.length; t++) for (let k = 0; k < rows; k++) { const f = Math.floor(k * NF / rows), v = (S[t][f] - lo) / (hi - lo + 1e-6); if (v < 0.4) continue; vx.globalAlpha = Math.min(0.45, (v - 0.4)); vx.fillRect(t * cw, H - (k + 1) * H / rows, cw + 0.5, H / rows + 0.5); }
+  vx.globalAlpha = 1; const fy = f => H - (f - FP.F_LO) / NF * H;
+  for (const p of fp.P) { const hit = matched && matched.has(p.t); vx.fillStyle = hit ? css('--pink') : css('--blue'); vx.beginPath(); vx.arc(p.t * cw, fy(p.f), (hit ? 3.4 : 2.4) * d, 0, 7); vx.fill(); }
+  if (m) {
+    fit(spike); const SW = spike.width, SH = spike.height; sx.clearRect(0, 0, SW, SH);
+    const top = m.ranked[0], hits = m.hitsBySong.get(top.song) || [], bins = new Map(); for (const [tq, td] of hits) { const o = td - tq; bins.set(o, (bins.get(o) || 0) + 1); }
+    const peak = Math.max(...bins.values()), span = 50, bw = SW / (span * 2 + 1);
+    for (const [o, c] of bins) { if (Math.abs(o - top.offset) > span) continue; sx.fillStyle = o === top.offset ? css('--pink') : css('--line'); const h = Math.max(2 * d, c / peak * (SH - 4 * d)); sx.fillRect((o - top.offset + span) * bw, SH - h, Math.max(1, bw - 1), h); }
   }
 }
-function drawSpike(m) {   // votes by time offset: one bar towers when the song lines up
-  spike.style.display = 'block'; fit(spike); const W = spike.width, H = spike.height, d = devicePixelRatio || 1;
-  sx.clearRect(0, 0, W, H);
-  const top = m.ranked[0], hits = m.hitsBySong.get(top.song) || [], bins = new Map();
-  for (const [tq, td] of hits) { const o = td - tq; bins.set(o, (bins.get(o) || 0) + 1); }
-  const offs = [...bins.keys()], mn = Math.min(...offs), mx = Math.max(...offs), peak = Math.max(...bins.values());
-  const n = Math.max(40, mx - mn + 1), bw = W / n;
-  for (const [o, c] of bins) { sx.fillStyle = o === top.offset ? css('--accent2') : css('--muted'); const h = Math.max(1.5 * d, c / peak * (H - 18 * d)); sx.fillRect((o - mn) * bw, H - h, Math.max(1, bw - 1), h); }
-  sx.fillStyle = css('--muted'); sx.font = `${11 * d}px Inter`; sx.fillText(`${top.score} codes line up at one moment in the song`, 0, 11 * d);
-}
+$('howcard').addEventListener('toggle', drawHow);
 
 // ---- listening
 let busy = false;
@@ -149,49 +191,53 @@ async function resampleTo(buf, rate, sr) {
   b.copyToChannel(buf, 0); const src = off.createBufferSource(); src.buffer = b; src.connect(off.destination); src.start();
   return (await off.startRendering()).getChannelData(0);
 }
-$('go').onclick = async () => {
-  if (busy) return; busy = true;
-  $('result').classList.remove('show'); spike.style.display = 'none';
+function setState(s) {   // idle | listening | found | none
+  $('wrap').classList.toggle('listening', s === 'listening'); $('bars').classList.toggle('on', s === 'listening');
+  $('golabel').textContent = s === 'listening' ? 'Listening…' : 'Tap to listen';
+  $('title').textContent = s === 'listening' ? 'Listening…' : s === 'found' ? 'Got it!' : s === 'none' ? 'Not sure yet' : "What's this song?";
+  $('hint').textContent = s === 'listening' ? 'Keep the music playing. This takes a few seconds.' : s === 'found' ? 'Here it is 👇' : s === 'none' ? 'Tips below 👇' : 'Hold your phone near the music and tap. The chorus works best.';
+  $('result').classList.toggle('show', s === 'found'); $('nores').classList.toggle('show', s === 'none');
+  if (s !== 'listening') $('prog').style.strokeDashoffset = 666;
+}
+const MAXT = 11;
+async function listen() {
+  if (busy) return; busy = true; setState('listening');
   let stream;
-  try {
-    await ready;
-    stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } });
-  } catch (e) {
-    $('status').innerHTML = `<span class="err">${DB ? 'Microphone blocked.' : 'Could not load the song library.'}</span> If you opened this inside Instagram, tap ⋯ and open it in your browser.`;
-    busy = false; return;
-  }
+  try { await ready; stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } }); }
+  catch (e) { setState('idle'); $('hint').innerHTML = `<span class="err">${DB ? 'Microphone is blocked.' : "Couldn't load the songs."}</span> If you opened this inside Instagram or WhatsApp, tap ⋯ and open it in Chrome or Safari.`; busy = false; return; }
   const ctx = new (window.AudioContext || window.webkitAudioContext)(); await ctx.resume();
   const src = ctx.createMediaStreamSource(stream), proc = ctx.createScriptProcessor(4096, 1, 1), chunks = [];
+  let level = 0;
   proc.onaudioprocess = e => { const d = e.inputBuffer.getChannelData(0); chunks.push(new Float32Array(d)); let q = 0; for (let i = 0; i < d.length; i += 8) q += d[i] * d[i]; level = Math.sqrt(q / (d.length / 8)); };
-  let level = 0; const mt = setInterval(() => { $('meter').firstChild.style.width = Math.min(100, Math.round(Math.sqrt(level) * 260)) + '%'; }, 100); $('meter').classList.add('on');
   src.connect(proc); proc.connect(ctx.destination);
-  $('go').classList.add('listening'); $('go').textContent = 'Listening…'; $('status').textContent = 'Listening…';
-  const t0 = performance.now(); let found = null, lastSolid = -1;
-  while (performance.now() - t0 < 11000 && !found) {
+  const bars = [...$('bars').children], t0 = performance.now();
+  const anim = setInterval(() => {
+    const el = (performance.now() - t0) / 1000; $('prog').style.strokeDashoffset = 666 * (1 - Math.min(1, el / MAXT));
+    bars.forEach((b, i) => { const v = Math.min(1, Math.sqrt(level) * 2.4) * (0.55 + 0.45 * Math.sin(el * 9 + i * 1.3)); b.style.height = (6 + 28 * Math.max(0, v)) + 'px'; });
+  }, 60);
+  let found = null, lastSolid = -1, lastFp = null;
+  while ((performance.now() - t0) / 1000 < MAXT && !found) {
     await new Promise(r => setTimeout(r, 700));
     const len = chunks.reduce((a, c) => a + c.length, 0), all = new Float32Array(len); let o = 0; for (const c of chunks) { all.set(c, o); o += c.length; }
     const pcm = await resampleTo(all.subarray(Math.max(0, all.length - ctx.sampleRate * 10)), ctx.sampleRate, FP.SR);
-    const fp = FP.fingerprint(pcm), m = FP.match(fp.H, DB), top = m.ranked[0], second = m.ranked[1];
-    const secs = (performance.now() - t0) / 1000;
-    // strict on purpose: songs outside the library (or a part outside the 30 s preview) must say "not found", never a wrong song.
-    // Tested on 176 unknown clips: 0 wrongly named; 160 known clips through a phone-speaker/room simulation: all found, ~4 s.
+    const fp = FP.fingerprint(pcm), m = FP.match(fp.H, DB), top = m.ranked[0], second = m.ranked[1], secs = (performance.now() - t0) / 1000;
+    // strict on purpose: unknown songs (or parts outside the 30 s preview) must say "not sure", never a wrong song.
     const s2 = second ? second.score : 0, solid = top && top.score >= 12 && top.score >= 2.5 * s2;
-    if (secs > 2.5 && top && ((solid && lastSolid === top.song) || (top.score >= 20 && top.score >= 3 * s2))) found = { fp, m, top };
-    lastSolid = solid ? top.song : -1;
-    $('guess').textContent = top ? `heard ${fp.P.length} stars · leading: ${SONGS[top.song].n} (${top.score} vs ${second ? second.score : 0})` : `heard ${fp.P.length} stars`;
-    draw(fp, null);
+    if (secs > 2.5 && top && ((solid && lastSolid === top.song) || (top.score >= 20 && top.score >= 3 * s2))) found = { fp, m, top, secs };
+    lastSolid = solid ? top.song : -1; lastFp = { fp, m: null, matched: null };
   }
-  clearInterval(mt); $('meter').classList.remove('on'); proc.disconnect(); src.disconnect(); stream.getTracks().forEach(t => t.stop()); ctx.close();
-  $('go').classList.remove('listening'); $('go').textContent = 'Tap to listen'; busy = false;
-  if (!found) { $('status').textContent = "Couldn't find it. Try the chorus, a bit louder, or a song from the list below."; return; }
-  const { fp, m, top } = found, s = SONGS[top.song];
-  // stars whose codes matched at the winning offset
-  const keys = new Set(m.hitsBySong.get(top.song).filter(([tq, td]) => Math.abs(td - tq - top.offset) <= 1).map(([tq]) => tq));
-  const stars = new Set(), pairs = [];
-  for (let i = 0; i < fp.P.length; i++) if (keys.has(fp.P[i].t)) { stars.add(fp.P[i].t * 1000 + fp.P[i].f); const j = fp.P.findIndex((q, k) => k > i && q.t > fp.P[i].t); if (j > 0) pairs.push([fp.P[i], fp.P[j]]); }
-  draw(fp, { stars, pairs }); drawSpike(m);
-  $('art').src = (s.art || '').replace('100x100', '300x300'); $('rt').textContent = s.n; $('ra').textContent = s.a; $('rl').href = s.u; $('rs').href = 'https://open.spotify.com/search/' + encodeURIComponent(s.n.replace(/\s*[\(\[].*$/, '') + ' ' + s.a.replace(/\s*(,|&|feat\.?)\s*/g, ' ').trim());
-  $('result').classList.add('show'); $('status').textContent = `Found it in ${((performance.now() - t0) / 1000).toFixed(1)} s`;
-};
+  clearInterval(anim); proc.disconnect(); src.disconnect(); stream.getTracks().forEach(t => t.stop()); ctx.close(); busy = false;
+  if (!found) { LAST = lastFp; setState('none'); drawHow(); return; }
+  const { fp, m, top, secs } = found, s = SONGS[top.song];
+  const matched = new Set(m.hitsBySong.get(top.song).filter(([tq, td]) => Math.abs(td - tq - top.offset) <= 1).map(([tq]) => tq));
+  LAST = { fp, m, matched };
+  $('art').src = art(s, 600); $('rt').textContent = clean(s.n); $('ra').textContent = s.a;
+  $('foundin').textContent = `FOUND IT · ${secs.toFixed(1)} S`;
+  $('rl').href = s.u; $('rs').href = 'https://open.spotify.com/search/' + encodeURIComponent(clean(s.n) + ' ' + s.a.replace(/\s*(,|&|feat\.?)\s*/g, ' ').trim());
+  setState('found'); addRecent(top.song); drawHow();
+  if (navigator.vibrate) navigator.vibrate(60);
+  $('result').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+$('go').onclick = listen; $('again').onclick = () => { setState('idle'); scrollTo({ top: 0, behavior: 'smooth' }); listen(); }; $('again2').onclick = $('again').onclick;
 </script>
 </body></html>
