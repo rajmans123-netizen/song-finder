@@ -169,10 +169,15 @@ let LAST = null;
 function drawHow() {
   if (!LAST || !$('howcard').open) return;
   const { fp, matched, m } = LAST; fit(viz); const W = viz.width, H = viz.height, d = devicePixelRatio || 1;
-  vx.clearRect(0, 0, W, H); const S = fp.S, NF = FP.NF, cw = W / Math.max(S.length, 1), rows = 90;
-  let lo = Infinity, hi = -Infinity; for (const row of S) for (let f = 0; f < NF; f += 4) { if (row[f] < lo) lo = row[f]; if (row[f] > hi) hi = row[f]; }
-  vx.fillStyle = css('--ink');
-  for (let t = 0; t < S.length; t++) for (let k = 0; k < rows; k++) { const f = Math.floor(k * NF / rows), v = (S[t][f] - lo) / (hi - lo + 1e-6); if (v < 0.4) continue; vx.globalAlpha = Math.min(0.45, (v - 0.4)); vx.fillRect(t * cw, H - (k + 1) * H / rows, cw + 0.5, H / rows + 0.5); }
+  vx.clearRect(0, 0, W, H); const S = fp.S, NF = FP.NF, cw = W / Math.max(S.length, 1);
+  // sharp per-pixel spectrogram with a contrast stretch (soft blocks looked hazy)
+  const vals = []; for (let f = 0; f < S.length; f += 2) for (let b = 0; b < NF; b += 3) vals.push(S[f][b]); vals.sort((a, b) => a - b);
+  const lo = vals[Math.floor(vals.length * 0.55)] ?? 0, hi = vals[Math.floor(vals.length * 0.995)] ?? 1, dark = matchMedia('(prefers-color-scheme: dark)').matches;
+  const bgc = dark ? [35, 36, 69] : [238, 240, 255], ink = dark ? [243, 241, 250] : [29, 27, 43], im = vx.createImageData(W, H);
+  for (let x = 0; x < W; x++) { const row = S[Math.min(S.length - 1, Math.floor(x / cw))]; if (!row) continue;
+    for (let y = 0; y < H; y++) { let v = (row[Math.min(NF - 1, Math.floor((1 - y / H) * NF))] - lo) / (hi - lo); v = v < 0 ? 0 : v > 1 ? 1 : Math.pow(v, 1.25);
+      const o = (y * W + x) * 4; im.data[o] = bgc[0] + (ink[0] - bgc[0]) * v; im.data[o + 1] = bgc[1] + (ink[1] - bgc[1]) * v; im.data[o + 2] = bgc[2] + (ink[2] - bgc[2]) * v; im.data[o + 3] = 255; } }
+  vx.putImageData(im, 0, 0);
   vx.globalAlpha = 1; const fy = f => H - (f - FP.F_LO) / NF * H;
   for (const p of fp.P) { const hit = matched && matched.has(p.t); vx.fillStyle = hit ? css('--pink') : css('--blue'); vx.beginPath(); vx.arc(p.t * cw, fy(p.f), (hit ? 3.4 : 2.4) * d, 0, 7); vx.fill(); }
   if (m) {
