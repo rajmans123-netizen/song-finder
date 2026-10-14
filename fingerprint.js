@@ -3,7 +3,7 @@
 (function (root) {
   const SR = 11025;            // everything is analysed at 11,025 Hz mono
   const N = 1024, HOP = 256;   // 93 ms window, 23 ms hop (43 frames a second)
-  const F_LO = 10, F_HI = 420; // bins kept: ~110 Hz .. 4.5 kHz, the range phone mics and speakers reproduce well
+  const F_LO = 28, F_HI = 420; // bins kept: ~300 Hz .. 4.5 kHz: phone speakers have no bass, so bass peaks never survive a room
   const RF = 10, RT = 7;       // a peak must be the loudest point within +-10 bins and +-7 frames
   const PEAKS_PER_SEC = 18;    // strongest peaks kept per second (the "stars")
   const FANOUT = 6;            // each star pairs with this many later stars
@@ -72,7 +72,7 @@
       for (let j = i + 1; j < P.length && n < FANOUT; j++) {
         const dt = P[j].t - P[i].t; if (dt < DT_MIN) continue; if (dt > DT_MAX) break;
         if (Math.abs(P[j].f - P[i].f) > DF_MAX) continue;
-        H.push([((P[i].f & 511) << 15) | ((P[j].f & 511) << 6) | dt, P[i].t]); n++;
+        H.push([(((P[i].f >> 1) & 255) << 14) | (((P[j].f >> 1) & 255) << 6) | dt, P[i].t]); n++;   // pitch in 2-bin steps: tolerates small speed/pitch drift
       }
     }
     return H;

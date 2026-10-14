@@ -20,6 +20,8 @@ h1{font-size:34px;line-height:1.05;margin:6px 0 6px;font-weight:800;letter-spaci
 #go.listening::after{animation-delay:.8s}
 @keyframes ring{0%{transform:scale(.85);opacity:.7}100%{transform:scale(1.25);opacity:0}}
 #status{font-size:15px;color:var(--muted);min-height:22px;text-align:center}
+#meter{width:160px;height:6px;border-radius:3px;background:var(--line);overflow:hidden;opacity:0;transition:opacity .2s}#meter.on{opacity:1}#meter i{display:block;height:100%;width:0;background:var(--accent);transition:width .1s}
+#guess{font-size:12px;color:var(--muted);min-height:16px;text-align:center}
 .card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:14px}
 #viz{width:100%;height:190px;display:block;border-radius:10px}
 .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-top:8px}
@@ -47,7 +49,9 @@ footer{margin-top:22px;font-size:12px;color:var(--muted);line-height:1.5}
 
   <div class="stage">
     <button id="go" aria-label="Tap to listen">Tap to listen</button>
-    <div id="status">Play a song out loud, then tap.</div>
+    <div id="status">Play a song out loud, then tap. The chorus works best.</div>
+    <div id="meter" aria-hidden="true"><i></i></div>
+    <div id="guess"></div>
   </div>
 
   <div class="card">
@@ -158,7 +162,8 @@ $('go').onclick = async () => {
   }
   const ctx = new (window.AudioContext || window.webkitAudioContext)(); await ctx.resume();
   const src = ctx.createMediaStreamSource(stream), proc = ctx.createScriptProcessor(4096, 1, 1), chunks = [];
-  proc.onaudioprocess = e => chunks.push(new Float32Array(e.inputBuffer.getChannelData(0)));
+  proc.onaudioprocess = e => { const d = e.inputBuffer.getChannelData(0); chunks.push(new Float32Array(d)); let q = 0; for (let i = 0; i < d.length; i += 8) q += d[i] * d[i]; level = Math.sqrt(q / (d.length / 8)); };
+  let level = 0; const mt = setInterval(() => { $('meter').firstChild.style.width = Math.min(100, Math.round(Math.sqrt(level) * 260)) + '%'; }, 100); $('meter').classList.add('on');
   src.connect(proc); proc.connect(ctx.destination);
   $('go').classList.add('listening'); $('go').textContent = 'Listening…'; $('status').textContent = 'Listening…';
   const t0 = performance.now(); let found = null;
@@ -168,12 +173,13 @@ $('go').onclick = async () => {
     const pcm = await resampleTo(all.subarray(Math.max(0, all.length - ctx.sampleRate * 10)), ctx.sampleRate, FP.SR);
     const fp = FP.fingerprint(pcm), m = FP.match(fp.H, DB), top = m.ranked[0], second = m.ranked[1];
     const secs = (performance.now() - t0) / 1000;
-    if (top && top.score >= 10 && top.score >= 2.2 * (second ? second.score : 0) && secs > 2.5) found = { fp, m, top };
+    if (top && top.score >= 9 && top.score >= 1.8 * (second ? second.score : 0) && secs > 2.5) found = { fp, m, top };   // speech/noise alone never scores above 7
+    $('guess').textContent = top ? `heard ${fp.P.length} stars · best guess: ${SONGS[top.song].n} (${top.score})` : `heard ${fp.P.length} stars`;
     draw(fp, null);
   }
-  proc.disconnect(); src.disconnect(); stream.getTracks().forEach(t => t.stop()); ctx.close();
+  clearInterval(mt); $('meter').classList.remove('on'); proc.disconnect(); src.disconnect(); stream.getTracks().forEach(t => t.stop()); ctx.close();
   $('go').classList.remove('listening'); $('go').textContent = 'Tap to listen'; busy = false;
-  if (!found) { $('status').textContent = "Couldn't find it. It might not be in my library yet; try one from the list below."; return; }
+  if (!found) { $('status').textContent = "Couldn't find it. Try the chorus, a bit louder, or a song from the list below."; return; }
   const { fp, m, top } = found, s = SONGS[top.song];
   // stars whose codes matched at the winning offset
   const keys = new Set(m.hitsBySong.get(top.song).filter(([tq, td]) => Math.abs(td - tq - top.offset) <= 1).map(([tq]) => tq));
