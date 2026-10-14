@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Song Finder</title>
+<meta name="description" content="A song recogniser built from scratch with Claude: tap, play a song, and it names it. English and Hindi hits.">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#F7F6F2;--card:#FFFFFF;--ink:#1F1D24;--muted:#77737F;--line:#E6E2DC;--accent:#3355FF;--accent2:#FF4D8D;--spec:#1F1D24}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121117;--card:#1B1A21;--ink:#F2F0F5;--muted:#9C98A6;--line:#2C2A33;--spec:#F2F0F5}}
+:root[data-theme="dark"]{--bg:#121117;--card:#1B1A21;--ink:#F2F0F5;--muted:#9C98A6;--line:#2C2A33;--spec:#F2F0F5}
+*{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+main{max-width:560px;margin:0 auto;padding:28px 16px 40px}
+.kicker{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);font-weight:600}
+h1{font-size:34px;line-height:1.05;margin:6px 0 6px;font-weight:800;letter-spacing:-.02em}
+.sub{color:var(--muted);font-size:15px;line-height:1.45;margin:0 0 22px}
+.stage{display:flex;flex-direction:column;align-items:center;gap:14px;margin:8px 0 18px}
+#go{width:172px;height:172px;border-radius:50%;border:0;background:var(--accent);color:#fff;font:800 18px Inter,sans-serif;cursor:pointer;position:relative;box-shadow:0 14px 40px -12px rgba(51,85,255,.6);transition:transform .15s}
+#go:active{transform:scale(.97)}#go:disabled{opacity:.92}
+#go.listening::before,#go.listening::after{content:"";position:absolute;inset:-14px;border-radius:50%;border:2px solid var(--accent);opacity:0;animation:ring 1.6s ease-out infinite}
+#go.listening::after{animation-delay:.8s}
+@keyframes ring{0%{transform:scale(.85);opacity:.7}100%{transform:scale(1.25);opacity:0}}
+#status{font-size:15px;color:var(--muted);min-height:22px;text-align:center}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:14px}
+#viz{width:100%;height:190px;display:block;border-radius:10px}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-top:8px}
+.legend i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;vertical-align:-1px}
+#result{display:none;margin-top:14px;gap:14px;align-items:center}
+#result.show{display:flex}
+#result img{width:84px;height:84px;border-radius:12px;object-fit:cover;flex:none;background:var(--line)}
+#result .t{font-weight:800;font-size:19px;line-height:1.2}#result .a{color:var(--muted);font-size:14px;margin-top:3px}
+#result .links{display:flex;gap:14px;margin-top:9px}#result a{font-size:13px;font-weight:700;color:var(--accent);text-decoration:none}
+#spike{width:100%;height:84px;display:none;margin-top:12px}
+#how{margin-top:20px}#how h2{font-size:16px;margin:0 0 10px}
+#how ol{margin:0;padding-left:20px;color:var(--muted);font-size:14px;line-height:1.55}#how b{color:var(--ink)}
+details{margin-top:16px}summary{cursor:pointer;font-weight:700;font-size:15px}
+#q{width:100%;margin:10px 0;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font:15px Inter,sans-serif}
+#list{max-height:340px;overflow:auto;font-size:14px}#list div{padding:7px 2px;border-bottom:1px solid var(--line)}#list span{color:var(--muted)}
+.tabs{display:flex;gap:6px;flex-wrap:wrap}.tabs button{border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:999px;padding:6px 11px;font:600 12px Inter,sans-serif;cursor:pointer}
+.tabs button.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+footer{margin-top:22px;font-size:12px;color:var(--muted);line-height:1.5}
+.err{color:var(--accent2)}
+</style></head>
+<body><main>
+  <div class="kicker">Raj Tries · Build 5 of 30</div>
+  <h1>Song Finder</h1>
+  <p class="sub">Built from scratch with Claude, the way Shazam does it. Tap, play a song near your phone, and it names it. It knows <b id="count">500</b> English and Hindi songs.</p>
+
+  <div class="stage">
+    <button id="go" aria-label="Tap to listen">Tap to listen</button>
+    <div id="status">Play a song out loud, then tap.</div>
+  </div>
+
+  <div class="card">
+    <canvas id="viz"></canvas>
+    <div class="legend"><span><i style="background:var(--muted)"></i>sound (pitch × time)</span><span><i style="background:var(--accent)"></i>loudest points ("stars")</span><span><i style="background:var(--accent2)"></i>stars that matched the song</span></div>
+    <div id="result"><img id="art" alt=""><div><div class="t" id="rt"></div><div class="a" id="ra"></div><div class="links"><a id="rl" target="_blank" rel="noopener">Apple Music →</a><a id="rs" target="_blank" rel="noopener">Spotify →</a></div></div></div>
+    <canvas id="spike"></canvas>
+  </div>
+
+  <div id="how" class="card">
+    <h2>How it works</h2>
+    <ol>
+      <li><b>Sound becomes a picture.</b> The mic audio becomes a spectrogram: time across, pitch up, loudness as brightness.</li>
+      <li><b>Keep only the stars.</b> Just the loudest points survive, about 18 a second. Background noise rarely beats them, so it works in a noisy room.</li>
+      <li><b>Pairs of stars become fingerprints.</b> Each star is paired with the next few: pitch, pitch and the gap between them make one tiny code.</li>
+      <li><b>Find the song where the codes line up.</b> Hundreds of codes match one song at the same moment, and that spike is the answer.</li>
+    </ol>
+  </div>
+
+  <details class="card"><summary>Songs it knows</summary>
+    <div class="tabs" id="tabs"></div>
+    <input id="q" placeholder="Search a song or artist" autocomplete="off">
+    <div id="list"></div>
+  </details>
+
+  <footer>Real Shazam knows millions of songs. This one knows the songs above: today's Apple Music charts (US, UK, India) plus all-time pop, Hindi classics, Bollywood love songs and roadtrip songs. It stores only fingerprints, never the audio; song info and links are from Apple Music. Your microphone audio never leaves your phone.</footer>
+</main>
+<script src="fingerprint.js"></script>
+<script>
+const $ = id => document.getElementById(id);
+let DB = null, SONGS = [];
+const ready = (async () => {
+  const [buf, songs] = await Promise.all([fetch('db.bin').then(r => r.arrayBuffer()), fetch('songs.json').then(r => r.json())]);
+  DB = FP.loadDB(buf);
+  SONGS = songs; $('count').textContent = songs.length; buildList();
+})();
+
+// ---- song list
+const CATS = ['All', 'Charts now', 'Pop classics', 'Roadtrip', 'Hindi classics', 'Bollywood love'];
+let cat = 'All';
+function buildList() {
+  $('tabs').innerHTML = CATS.map(c => `<button class="${c === cat ? 'on' : ''}" data-c="${c}">${c}</button>`).join('');
+  const q = $('q').value.trim().toLowerCase();
+  const rows = SONGS.filter(s => (cat === 'All' || (s.c || []).includes(cat)) && (!q || (s.n + ' ' + s.a).toLowerCase().includes(q)));
+  $('list').innerHTML = rows.map(s => `<div>${esc(s.n)} <span>· ${esc(s.a)}</span></div>`).join('') || '<div><span>No songs match.</span></div>';
+}
+const esc = s => s.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+$('tabs').onclick = e => { if (e.target.dataset.c) { cat = e.target.dataset.c; buildList(); } };
+$('q').oninput = buildList;
+
+// ---- drawing
+const viz = $('viz'), vx = viz.getContext('2d'), spike = $('spike'), sx = spike.getContext('2d');
+const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+function fit(c) { const r = c.getBoundingClientRect(), d = devicePixelRatio || 1; c.width = Math.round(r.width * d); c.height = Math.round(r.height * d); }
+function draw(fp, matched) {
+  fit(viz); const W = viz.width, H = viz.height, d = devicePixelRatio || 1;
+  vx.clearRect(0, 0, W, H);
+  const S = fp.S, NF = FP.NF, cw = W / Math.max(S.length, Math.round(3 * FP.SR / FP.HOP));   // fill the width with what was heard
+  let lo = Infinity, hi = -Infinity;
+  for (const row of S) for (let f = 0; f < NF; f += 4) { if (row[f] < lo) lo = row[f]; if (row[f] > hi) hi = row[f]; }
+  const ink = css('--spec'), rows = 96;
+  vx.fillStyle = ink;
+  for (let t = 0; t < S.length; t++) for (let k = 0; k < rows; k++) {
+    const f = Math.floor(k * NF / rows), v = (S[t][f] - lo) / (hi - lo + 1e-6);
+    if (v < 0.35) continue; vx.globalAlpha = Math.min(0.55, (v - 0.35) * 1.1); vx.fillRect(t * cw, H - (k + 1) * H / rows, cw + 0.5, H / rows + 0.5);
+  }
+  vx.globalAlpha = 1;
+  const fy = f => H - (f - FP.F_LO) / NF * H;
+  if (matched) {   // link matched stars to their partners
+    vx.strokeStyle = css('--accent2'); vx.globalAlpha = .35; vx.lineWidth = 1 * d; vx.beginPath();
+    for (const [a, b] of matched.pairs) { vx.moveTo(a.t * cw, fy(a.f)); vx.lineTo(b.t * cw, fy(b.f)); }
+    vx.stroke(); vx.globalAlpha = 1;
+  }
+  for (const p of fp.P) {
+    const hit = matched && matched.stars.has(p.t * 1000 + p.f);
+    vx.fillStyle = hit ? css('--accent2') : css('--accent');
+    vx.beginPath(); vx.arc(p.t * cw, fy(p.f), (hit ? 3.2 : 2.2) * d, 0, 7); vx.fill();
+  }
+}
+function drawSpike(m) {   // votes by time offset: one bar towers when the song lines up
+  spike.style.display = 'block'; fit(spike); const W = spike.width, H = spike.height, d = devicePixelRatio || 1;
+  sx.clearRect(0, 0, W, H);
+  const top = m.ranked[0], hits = m.hitsBySong.get(top.song) || [], bins = new Map();
+  for (const [tq, td] of hits) { const o = td - tq; bins.set(o, (bins.get(o) || 0) + 1); }
+  const offs = [...bins.keys()], mn = Math.min(...offs), mx = Math.max(...offs), peak = Math.max(...bins.values());
+  const n = Math.max(40, mx - mn + 1), bw = W / n;
+  for (const [o, c] of bins) { sx.fillStyle = o === top.offset ? css('--accent2') : css('--muted'); const h = Math.max(1.5 * d, c / peak * (H - 18 * d)); sx.fillRect((o - mn) * bw, H - h, Math.max(1, bw - 1), h); }
+  sx.fillStyle = css('--muted'); sx.font = `${11 * d}px Inter`; sx.fillText(`${top.score} codes line up at one moment in the song`, 0, 11 * d);
+}
+
+// ---- listening
+let busy = false;
+async function resampleTo(buf, rate, sr) {
+  const n = Math.ceil(buf.length * sr / rate), off = new OfflineAudioContext(1, n, sr), b = off.createBuffer(1, buf.length, rate);
+  b.copyToChannel(buf, 0); const src = off.createBufferSource(); src.buffer = b; src.connect(off.destination); src.start();
+  return (await off.startRendering()).getChannelData(0);
+}
+$('go').onclick = async () => {
+  if (busy) return; busy = true;
+  $('result').classList.remove('show'); spike.style.display = 'none';
+  let stream;
+  try {
+    await ready;
+    stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } });
+  } catch (e) {
+    $('status').innerHTML = `<span class="err">${DB ? 'Microphone blocked.' : 'Could not load the song library.'}</span> If you opened this inside Instagram, tap ⋯ and open it in your browser.`;
+    busy = false; return;
+  }
+  const ctx = new (window.AudioContext || window.webkitAudioContext)(); await ctx.resume();
+  const src = ctx.createMediaStreamSource(stream), proc = ctx.createScriptProcessor(4096, 1, 1), chunks = [];
+  proc.onaudioprocess = e => chunks.push(new Float32Array(e.inputBuffer.getChannelData(0)));
+  src.connect(proc); proc.connect(ctx.destination);
+  $('go').classList.add('listening'); $('go').textContent = 'Listening…'; $('status').textContent = 'Listening…';
+  const t0 = performance.now(); let found = null;
+  while (performance.now() - t0 < 11000 && !found) {
+    await new Promise(r => setTimeout(r, 700));
+    const len = chunks.reduce((a, c) => a + c.length, 0), all = new Float32Array(len); let o = 0; for (const c of chunks) { all.set(c, o); o += c.length; }
+    const pcm = await resampleTo(all.subarray(Math.max(0, all.length - ctx.sampleRate * 10)), ctx.sampleRate, FP.SR);
+    const fp = FP.fingerprint(pcm), m = FP.match(fp.H, DB), top = m.ranked[0], second = m.ranked[1];
+    const secs = (performance.now() - t0) / 1000;
+    if (top && top.score >= 10 && top.score >= 2.2 * (second ? second.score : 0) && secs > 2.5) found = { fp, m, top };
+    draw(fp, null);
+  }
+  proc.disconnect(); src.disconnect(); stream.getTracks().forEach(t => t.stop()); ctx.close();
+  $('go').classList.remove('listening'); $('go').textContent = 'Tap to listen'; busy = false;
+  if (!found) { $('status').textContent = "Couldn't find it. It might not be in my library yet; try one from the list below."; return; }
+  const { fp, m, top } = found, s = SONGS[top.song];
+  // stars whose codes matched at the winning offset
+  const keys = new Set(m.hitsBySong.get(top.song).filter(([tq, td]) => Math.abs(td - tq - top.offset) <= 1).map(([tq]) => tq));
+  const stars = new Set(), pairs = [];
+  for (let i = 0; i < fp.P.length; i++) if (keys.has(fp.P[i].t)) { stars.add(fp.P[i].t * 1000 + fp.P[i].f); const j = fp.P.findIndex((q, k) => k > i && q.t > fp.P[i].t); if (j > 0) pairs.push([fp.P[i], fp.P[j]]); }
+  draw(fp, { stars, pairs }); drawSpike(m);
+  $('art').src = (s.art || '').replace('100x100', '300x300'); $('rt').textContent = s.n; $('ra').textContent = s.a; $('rl').href = s.u; $('rs').href = 'https://open.spotify.com/search/' + encodeURIComponent(s.n.replace(/\s*[\(\[].*$/, '') + ' ' + s.a.replace(/\s*(,|&|feat\.?)\s*/g, ' ').trim());
+  $('result').classList.add('show'); $('status').textContent = `Found it in ${((performance.now() - t0) / 1000).toFixed(1)} s`;
+};
+</script>
+</body></html>
